@@ -28,6 +28,6 @@ De app bestaat uit drie bestanden: `index.html`, `styles.css` en `app.js`.
 
 ## Aanpassen
 
-- **Kleuren:** wijzig de variabelen bovenaan `styles.css` (`--accent`, `--bg`, enz.)
+- **Kleuren:** de stijl is afgestemd op brakermedia.nl (donker, Geist). Pas de variabelen bovenaan `styles.css` aan om dit te wijzigen
 - **Standaardtaken en budgetposten:** wijzig `DEFAULT_TASKS` en `DEFAULT_BUDGET` bovenaan `app.js`
 - **Lettertypen:** worden geladen via Google Fonts in `index.html`
