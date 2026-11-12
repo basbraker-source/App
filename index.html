@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0d0d0c">
   <title>Bruiloftsplanner</title>
-  <meta name="description" content="Plan jullie bruiloft: aftellen, checklist, budget, gastenlijst en leveranciers op één plek.">
+  <meta name="description" content="Plan jullie bruiloft: aftellen, checklist, budget, gastenlijst, tafelschikking, draaiboek en leveranciers op één plek.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -17,6 +17,7 @@
       <p class="eyebrow">Bruiloftsplanner · Braker Media</p>
       <h1 id="couple-title">Ons trouwplan</h1>
       <p id="hero-date" class="hero-date"></p>
+      <p id="sync-badge" class="sync-badge" hidden>Samen plannen staat aan</p>
       <div id="countdown" class="countdown" aria-live="polite"></div>
     </header>
 
@@ -25,6 +26,8 @@
       <button role="tab" data-tab="checklist">Checklist</button>
       <button role="tab" data-tab="budget">Budget</button>
       <button role="tab" data-tab="gasten">Gasten</button>
+      <button role="tab" data-tab="tafels">Tafels</button>
+      <button role="tab" data-tab="draaiboek">Draaiboek</button>
       <button role="tab" data-tab="leveranciers">Leveranciers</button>
       <button role="tab" data-tab="instellingen">Instellingen</button>
     </nav>
@@ -34,13 +37,16 @@
       <section id="tab-overzicht" class="panel" role="tabpanel">
         <div id="welcome" class="card welcome" hidden>
           <h2>Welkom!</h2>
-          <p>Vul jullie namen, trouwdatum en budget in om te beginnen. Alles wordt alleen in deze browser bewaard.</p>
+          <p>Vul jullie namen, trouwdatum en budget in om te beginnen. Alles wordt in deze browser bewaard.</p>
           <form id="welcome-form" class="form-grid">
             <label>Naam 1<input name="partner1" required placeholder="Bijv. Anna"></label>
             <label>Naam 2<input name="partner2" required placeholder="Bijv. Daan"></label>
             <label>Trouwdatum<input name="date" type="date"></label>
             <label>Totaal budget (€)<input name="budget" type="number" min="0" step="100" placeholder="20000"></label>
-            <button class="btn primary" type="submit">Start met plannen</button>
+            <div class="btn-row wide">
+              <button class="btn primary" type="submit">Start met plannen</button>
+              <button class="btn" type="button" id="welcome-join">Mijn partner heeft al een koppelcode</button>
+            </div>
           </form>
         </div>
 
@@ -146,6 +152,61 @@
         </div>
       </section>
 
+      <!-- TAFELS -->
+      <section id="tab-tafels" class="panel" role="tabpanel" hidden>
+        <div class="stats three">
+          <div class="stat card"><span class="stat-label">Tafels</span><span id="s-tables" class="stat-value">0</span><span id="s-seats" class="stat-sub"></span></div>
+          <div class="stat card"><span class="stat-label">Geplaatst</span><span id="s-seated" class="stat-value">0</span><span class="stat-sub">personen</span></div>
+          <div class="stat card"><span class="stat-label">Nog te plaatsen</span><span id="s-open" class="stat-value">0</span><span class="stat-sub">personen</span></div>
+        </div>
+        <div class="card">
+          <form id="table-form" class="inline-form">
+            <input name="name" placeholder="Tafelnaam, bijv. 'Bruidstafel' of 'Tafel 1'">
+            <input name="seats" type="number" min="1" value="8" title="Aantal stoelen" aria-label="Aantal stoelen">
+            <button class="btn primary" type="submit">Tafel toevoegen</button>
+          </form>
+          <div class="toolbar">
+            <div class="segmented" role="group" aria-label="Welke gasten">
+              <button data-seatfilter="dag" class="active">Daggasten</button>
+              <button data-seatfilter="avond">Avondgasten</button>
+              <button data-seatfilter="alle">Alle</button>
+            </div>
+          </div>
+          <p class="note">Gasten die niet komen, worden niet getoond. Op de computer kun je gasten ook naar een tafel slepen.</p>
+        </div>
+        <div class="seating">
+          <div class="card unseated-card" data-drop="">
+            <h2>Nog geen plek</h2>
+            <p id="seat-hint" class="note">Voeg eerst een tafel toe.</p>
+            <ul id="unseated" class="seat-list"></ul>
+          </div>
+          <div id="tables" class="tables-grid"></div>
+        </div>
+      </section>
+
+      <!-- DRAAIBOEK -->
+      <section id="tab-draaiboek" class="panel" role="tabpanel" hidden>
+        <div class="card">
+          <h2>Programma van de dag</h2>
+          <form id="schedule-form" class="inline-form schedule-form">
+            <input name="time" type="time" required aria-label="Tijd">
+            <input name="title" required placeholder="Onderdeel, bijv. 'Ceremonie'">
+            <input name="who" placeholder="Wie of waar">
+            <button class="btn primary" type="submit">Toevoegen</button>
+          </form>
+          <div class="toolbar">
+            <button id="schedule-template" class="btn" type="button">Voorbeeldprogramma invoegen</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Tijd</th><th>Onderdeel</th><th>Wie / waar</th><th>Notitie</th><th></th></tr></thead>
+              <tbody id="schedule-rows"></tbody>
+            </table>
+          </div>
+          <p class="note">Tip: deel het draaiboek met je ceremoniemeester via Instellingen → Afdrukken.</p>
+        </div>
+      </section>
+
       <!-- LEVERANCIERS -->
       <section id="tab-leveranciers" class="panel" role="tabpanel" hidden>
         <div class="card">
@@ -178,9 +239,34 @@
           </form>
           <p id="settings-saved" class="note" hidden>Opgeslagen ✓</p>
         </div>
+        <div class="card" id="sync-card">
+          <h2>Samen plannen</h2>
+          <div id="sync-off">
+            <p class="note">Plan samen, elk op je eigen telefoon of computer. Maak een koppelcode en vul die in op het apparaat van je partner. Wijzigingen worden dan automatisch gedeeld.</p>
+            <div class="sync-actions">
+              <button id="sync-create" class="btn primary" type="button">Koppelcode maken</button>
+              <form id="sync-join" class="inline-form">
+                <input name="code" placeholder="Code van je partner, bijv. K7QM-4XPA-9RTE" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Koppelcode">
+                <button class="btn" type="submit">Koppelen</button>
+              </form>
+            </div>
+          </div>
+          <div id="sync-on" hidden>
+            <p class="stat-label">Jullie koppelcode</p>
+            <p id="sync-code" class="sync-code"></p>
+            <p id="sync-status" class="note"></p>
+            <div class="btn-row">
+              <button id="sync-copy" class="btn" type="button">Code kopiëren</button>
+              <button id="sync-unlink" class="btn" type="button">Ontkoppelen op dit apparaat</button>
+              <button id="sync-delete" class="btn danger" type="button">Verwijderen van server</button>
+            </div>
+          </div>
+          <p id="sync-unavailable" class="note" hidden>Samen plannen is op dit moment niet beschikbaar. Je planning blijft gewoon in deze browser bewaard.</p>
+          <p class="note">Met een koppelcode wordt jullie planning bewaard op de server van Braker Media. Alleen wie de code heeft, kan de planning openen; deel hem dus alleen met elkaar. Na 18 maanden zonder wijzigingen wordt de planning automatisch verwijderd, en je kunt hem hierboven ook zelf verwijderen.</p>
+        </div>
         <div class="card">
           <h2>Gegevens bewaren</h2>
-          <p class="note">Jullie planning wordt alleen in deze browser op dit apparaat opgeslagen. Maak een back-up om hem op een ander apparaat te openen of veilig te stellen.</p>
+          <p class="note">Jullie planning wordt in deze browser op dit apparaat opgeslagen. Maak af en toe een back-up om hem veilig te stellen.</p>
           <div class="btn-row">
             <button id="export-btn" class="btn">Back-up downloaden</button>
             <label class="btn">Back-up terugzetten<input id="import-file" type="file" accept="application/json,.json" hidden></label>
@@ -202,7 +288,7 @@
     </div>
 
     <footer class="footer">
-      <p>Jullie gegevens blijven privé in je eigen browser.</p>
+      <p>Jullie planning blijft privé: in je eigen browser, of gedeeld via jullie eigen koppelcode.</p>
       <a href="https://brakermedia.nl/contact/" target="_top">Jullie trouwdag op film? Vraag je datum aan →</a>
     </footer>
   </div>

@@ -1,33 +1,48 @@
 # Bruiloftsplanner
 
-Een web-app waarmee bruidsparen hun bruiloft plannen. Alles staat op één plek:
+Een web-app waarmee bruidsparen hun bruiloft plannen, in de stijl van brakermedia.nl.
 
-- **Overzicht** met aftellen naar de grote dag en de voortgang van alles
-- **Checklist** met 43 standaardtaken, ingedeeld per periode (12+ maanden vooraf tot na de bruiloft). Je kunt taken toevoegen, afvinken en filteren
-- **Budget** per post (begroot, werkelijk, betaald). Het totaalbudget wordt automatisch verdeeld over de standaardposten
-- **Gastenlijst** met dag- en avondgasten, reacties (RSVP) en dieetwensen
-- **Leveranciers** met contactgegevens en status (oriënteren, offerte, geboekt, betaald)
-- **Back-up** downloaden en terugzetten, afdrukken en alles wissen
+- **Overzicht:** aftellen naar de grote dag en de voortgang van alles
+- **Checklist:** 43 standaardtaken, ingedeeld per periode
+- **Budget:** per post begroot, werkelijk en betaald, met automatische verdeling van het totaalbudget
+- **Gasten:** dag- en avondgasten, reacties (RSVP) en dieetwensen
+- **Tafels:** tafelschikking met een keuzemenu of door te slepen, met een teller voor vrije stoelen
+- **Draaiboek:** het programma van de dag op tijd gesorteerd, met een voorbeeldprogramma
+- **Leveranciers:** contactgegevens en status
+- **Samen plannen:** beide partners op hun eigen apparaat, via een koppelcode
+- **Back-up:** downloaden en terugzetten, afdrukken en alles wissen
 
-Alle gegevens blijven in de browser van de bezoeker (`localStorage`). Er is geen server, database of account nodig, en de gegevens van bruidsparen komen niet bij jou terecht.
+## Bestanden
 
-## Op je website zetten
+| Bestand | Wat het doet |
+|---|---|
+| `index.html`, `styles.css`, `app.js` | De app zelf |
+| `sync.php` | Server-script voor samen plannen (PHP 7.4 of hoger, standaard bij Strato) |
 
-De app bestaat uit drie bestanden: `index.html`, `styles.css` en `app.js`.
+## Op de website zetten (Strato + FileZilla)
 
-**Optie 1: als eigen pagina.** Upload de drie bestanden naar een map op je webserver, bijvoorbeeld `/planner/`. De app staat dan op `https://jouwsite.nl/planner/`.
+1. Upload de map `planner` met alle vier de bestanden naar de hoofdmap van brakermedia.nl.
+2. Open `https://brakermedia.nl/planner/`.
+3. Bij het eerste gebruik van samen plannen maakt `sync.php` zelf de map `planner/data` aan en schermt die af met een `.htaccess`-bestand.
 
-**Optie 2: in een bestaande pagina (WordPress, Wix, Squarespace, enz.).** Upload de bestanden zoals bij optie 1 en voeg op je pagina een HTML-blok toe met:
+Controleer na het uploaden dat `https://brakermedia.nl/planner/data/` een foutmelding geeft (403 Forbidden). Dan zijn de gegevens niet van buitenaf te openen.
 
-```html
-<iframe src="https://jouwsite.nl/planner/" title="Bruiloftsplanner"
-        style="width:100%; height:1400px; border:0;" loading="lazy"></iframe>
-```
+## Samen plannen: hoe het werkt
 
-**Optie 3: gratis hosting via GitHub Pages.** Ga in deze repository naar *Settings → Pages* en kies de branch met deze bestanden. Gebruik daarna de link van GitHub Pages in de iframe van optie 2.
+- **Koppelcode:** partner 1 maakt in Instellingen een koppelcode, en partner 2 vult die in op het eigen apparaat.
+- **Opslag:** de planning wordt als JSON-bestand in `planner/data/` bewaard. De bestandsnaam is een hash van de code, zodat de code zelf nergens op de server staat.
+- **Synchroniseren:** wijzigingen gaan automatisch heen en weer (elke 15 seconden en bij het openen van de app). Als beide partners tegelijk iets wijzigen, worden de wijzigingen per onderdeel samengevoegd.
+- **Bewaartermijn:** na 18 maanden zonder wijzigingen wordt een planning automatisch verwijderd. Een bruidspaar kan de planning ook zelf van de server verwijderen.
+- **Bescherming tegen misbruik:** per IP-adres zijn maximaal 20 nieuwe codes en 30 onjuiste codes per uur toegestaan.
+
+### Privacy (AVG)
+
+Bij samen plannen bewaar jij als Braker Media persoonsgegevens van bruidsparen en hun gasten, zoals namen en dieetwensen. Zet daarom iets als dit in je privacyverklaring:
+
+> **Bruiloftsplanner.** Als je in de bruiloftsplanner 'Samen plannen' gebruikt, bewaren wij jullie planning (zoals namen, gastenlijst en budget) op onze server, zodat jullie die op meerdere apparaten kunnen gebruiken. Alleen wie de koppelcode heeft, kan de planning openen. Wij gebruiken deze gegevens nergens anders voor. De planning wordt automatisch verwijderd na 18 maanden zonder wijzigingen, en je kunt hem op elk moment zelf verwijderen via Instellingen → Samen plannen → Verwijderen van server. Gebruik je 'Samen plannen' niet, dan blijft alles alleen in je eigen browser.
 
 ## Aanpassen
 
-- **Kleuren:** de stijl is afgestemd op brakermedia.nl (donker, Geist). Pas de variabelen bovenaan `styles.css` aan om dit te wijzigen
-- **Standaardtaken en budgetposten:** wijzig `DEFAULT_TASKS` en `DEFAULT_BUDGET` bovenaan `app.js`
-- **Lettertypen:** worden geladen via Google Fonts in `index.html`
+- **Kleuren:** wijzig de variabelen bovenaan `styles.css`
+- **Standaardtaken, budgetposten en voorbeeldprogramma:** wijzig `DEFAULT_TASKS`, `DEFAULT_BUDGET` en `SCHEDULE_TEMPLATE` bovenaan `app.js`
+- **Bewaartermijn en limieten:** wijzig de constanten bovenaan `sync.php`
