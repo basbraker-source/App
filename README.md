@@ -1,6 +1,6 @@
 # Bruiloftsplanner
 
-Een web-app waarmee bruidsparen hun bruiloft plannen, in de stijl van brakermedia.nl.
+Een web-app waarmee bruidsparen hun bruiloft plannen, in de boho-stijl van trouwfilmtwente.nl.
 
 - **Overzicht:** aftellen naar de grote dag en de voortgang van alles
 - **Checklist:** 43 standaardtaken, ingedeeld per periode
@@ -17,15 +17,16 @@ Een web-app waarmee bruidsparen hun bruiloft plannen, in de stijl van brakermedi
 | Bestand | Wat het doet |
 |---|---|
 | `index.html`, `styles.css`, `app.js` | De app zelf |
+| `beeld.webp` | Foto in de boog bovenaan (uit de film 'Gouden uur'); vervang gerust door een ander staand beeld van 600×800 |
 | `sync.php` | Server-script voor samen plannen (PHP 7.4 of hoger, standaard bij Strato) |
 
 ## Op de website zetten (Strato + FileZilla)
 
-1. Upload de map `planner` met alle vier de bestanden naar de hoofdmap van brakermedia.nl.
-2. Open `https://brakermedia.nl/planner/`.
+1. Upload de map `planner` met alle vijf de bestanden naar de hoofdmap van je website.
+2. Open `https://jouwsite.nl/planner/`.
 3. Bij het eerste gebruik van samen plannen maakt `sync.php` zelf de map `planner/data` aan en schermt die af met een `.htaccess`-bestand.
 
-Controleer na het uploaden dat `https://brakermedia.nl/planner/data/` een foutmelding geeft (403 Forbidden). Dan zijn de gegevens niet van buitenaf te openen.
+Controleer na het uploaden dat `https://jouwsite.nl/planner/data/` een foutmelding geeft (403 Forbidden). Dan zijn de gegevens niet van buitenaf te openen.
 
 ## Samen plannen: hoe het werkt
 
@@ -43,6 +44,7 @@ Bij samen plannen bewaar jij als Braker Media persoonsgegevens van bruidsparen e
 
 ## Aanpassen
 
-- **Kleuren:** wijzig de variabelen bovenaan `styles.css`
+- **Kleuren en lettertypen:** wijzig de variabelen bovenaan `styles.css`
+- **Link onderaan:** de knop 'Vraag jullie datum aan' verwijst naar trouwfilmtwente.nl/#reserveer; pas dit aan in `index.html`
 - **Standaardtaken, budgetposten en voorbeeldprogramma:** wijzig `DEFAULT_TASKS`, `DEFAULT_BUDGET` en `SCHEDULE_TEMPLATE` bovenaan `app.js`
 - **Bewaartermijn en limieten:** wijzig de constanten bovenaan `sync.php`

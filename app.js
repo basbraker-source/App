@@ -197,7 +197,9 @@
 
   function renderHeader() {
     const { partner1, partner2, venue } = state.settings;
-    $('#couple-title').textContent = partner1 && partner2 ? `${partner1} & ${partner2}` : 'Ons trouwplan';
+    $('#couple-title').innerHTML = partner1 && partner2
+      ? `${esc(partner1)} <span class="en">&amp;</span> ${esc(partner2)}`
+      : 'Ons <em>trouwplan</em>';
     const wd = weddingDate();
     const parts = [];
     if (wd) parts.push(wd.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
@@ -447,15 +449,27 @@
     $('#s-seated').textContent = seated;
     $('#s-open').textContent = all - seated;
     state.tables.forEach((t) => {
-      const el = document.getElementById('tc-' + t.id);
-      if (!el) return;
-      const n = used(t.id), cap = Math.max(0, num(t.seats));
-      el.textContent = `${n} / ${cap}`;
-      el.classList.toggle('warn', n > cap);
-      const bar = document.getElementById('tb-' + t.id);
-      if (bar) { bar.style.width = Math.min(100, pct(n, cap)) + '%'; bar.classList.toggle('over', n > cap); }
+      const el = document.getElementById('tv-' + t.id);
+      if (el) el.innerHTML = tableSvg(used(t.id), Math.max(0, num(t.seats)));
     });
     return pool;
+  }
+
+  // Ronde tafel met stoelen eromheen: gevuld = bezet, rood = te veel mensen.
+  function tableSvg(n, cap) {
+    const total = Math.min(Math.max(cap, n), 24);
+    const r = total > 14 ? 74 : 68;
+    let chairs = '';
+    for (let i = 0; i < total; i++) {
+      const a = (i / total) * Math.PI * 2 - Math.PI / 2;
+      const cls = i < Math.min(n, cap) ? 'stoel bezet' : i < cap ? 'stoel' : 'stoel teveel';
+      chairs += `<circle class="${cls}" cx="${(85 + r * Math.cos(a)).toFixed(1)}" cy="${(85 + r * Math.sin(a)).toFixed(1)}" r="${total > 14 ? 6 : 8}"/>`;
+    }
+    return `<svg viewBox="0 0 170 170" role="img" aria-label="${n} van ${cap} plaatsen bezet">
+      <circle class="tafel${n > cap ? ' vol' : ''}" cx="85" cy="85" r="50"/>${chairs}
+      <text x="85" y="88" text-anchor="middle">${n}/${cap}</text>
+      <text class="klein" x="85" y="106" text-anchor="middle">${n > cap ? 'TE VOL' : 'BEZET'}</text>
+    </svg>`;
   }
 
   function guestChip(g, inTable) {
@@ -489,11 +503,10 @@
           <input class="table-name" value="${esc(t.name)}" data-field="name" aria-label="Tafelnaam">
           <button class="icon-btn" data-action="delete-row" title="Tafel verwijderen" aria-label="Tafel verwijderen">×</button>
         </div>
+        <div class="table-visual" id="tv-${esc(t.id)}"></div>
         <div class="table-meta">
-          <span id="tc-${esc(t.id)}" class="mono"></span>
           <label class="mono">stoelen <input type="number" min="1" value="${Math.max(1, num(t.seats))}" data-field="seats" aria-label="Aantal stoelen"></label>
         </div>
-        <div class="bar"><span id="tb-${esc(t.id)}"></span></div>
         <ul class="seat-list">${seatedAt(t.id).map((g) => guestChip(g, true)).join('') || '<li class="empty">Sleep gasten hierheen of kies een tafel.</li>'}</ul>
       </div>`).join('');
     renderSeatingSummary();
@@ -551,6 +564,15 @@
   });
 
   /* ---------- Draaiboek ---------- */
+  // Tijd altijd als 24-uurs HH:MM, ook als iemand '1330', '9.5' of '13u30' typt.
+  function normTime(v) {
+    const t = String(v || '').trim();
+    const m = t.match(/^(\d{1,2})(\d{2})$/) || t.match(/^(\d{1,2})(?:[:.,u h]?(\d{1,2}))?$/i);
+    if (!m) return '';
+    const h = Math.min(23, parseInt(m[1], 10)), min = Math.min(59, parseInt(m[2] || '0', 10) * (m[2] && m[2].length === 1 ? 10 : 1));
+    return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
+  }
+
   // Tijden na middernacht (tot 06:00) horen bij het einde van de dag.
   const timeKey = (t) => (!t ? '99:99' : t < '06:00' ? String(24 + parseInt(t, 10)) + t.slice(2) : t);
   const byTime = (a, b) => timeKey(a.time).localeCompare(timeKey(b.time));
@@ -558,15 +580,20 @@
   function renderSchedule() {
     const items = [...state.schedule].sort(byTime);
     $('#schedule-template').hidden = items.length > 0;
-    $('#schedule-rows').innerHTML = items.length
-      ? items.map((s) => `<tr data-id="${esc(s.id)}" data-list="schedule">
-          <td><input type="time" value="${esc(s.time)}" data-field="time" aria-label="Tijd" class="time-input"></td>
-          <td><input value="${esc(s.title)}" data-field="title" aria-label="Onderdeel"></td>
-          <td><input value="${esc(s.who || '')}" data-field="who" placeholder="—" aria-label="Wie of waar"></td>
-          <td><input value="${esc(s.note || '')}" data-field="note" placeholder="—" aria-label="Notitie"></td>
-          <td><button class="icon-btn" data-action="delete-row" title="Verwijderen" aria-label="Onderdeel verwijderen">×</button></td>
-        </tr>`).join('')
-      : '<tr><td colspan="5" class="empty">Nog geen programma. Voeg een onderdeel toe of begin met het voorbeeldprogramma.</td></tr>';
+    $('#timeline').innerHTML = items.length
+      ? items.map((s) => `<li data-id="${esc(s.id)}" data-list="schedule">
+          <input class="tl-tijd" inputmode="numeric" maxlength="5" placeholder="--:--" value="${esc(s.time)}" data-field="time" aria-label="Tijd">
+          <span class="dot"></span>
+          <div>
+            <input class="tl-titel" value="${esc(s.title)}" data-field="title" aria-label="Onderdeel">
+            <div class="tl-sub">
+              <input value="${esc(s.who || '')}" data-field="who" placeholder="Wie of waar" aria-label="Wie of waar">
+              <input value="${esc(s.note || '')}" data-field="note" placeholder="Notitie" aria-label="Notitie">
+            </div>
+          </div>
+          <button class="icon-btn" data-action="delete-row" title="Verwijderen" aria-label="Onderdeel verwijderen">×</button>
+        </li>`).join('')
+      : '<li class="empty">Nog geen programma. Voeg een onderdeel toe of begin met het voorbeeldprogramma.</li>';
   }
 
   $('#schedule-form').addEventListener('submit', (e) => {
@@ -574,7 +601,7 @@
     const f = e.target;
     const title = f.elements.title.value.trim();
     if (!title) return;
-    state.schedule.push({ id: uid(), time: f.elements.time.value, title, who: f.elements.who.value.trim(), note: '' });
+    state.schedule.push({ id: uid(), time: normTime(f.elements.time.value), title, who: f.elements.who.value.trim(), note: '' });
     f.elements.title.value = '';
     f.elements.who.value = '';
     commit();
@@ -630,7 +657,7 @@
     const list = row.dataset.list;
     const item = state[list].find((x) => x.id === row.dataset.id);
     if (!item) return;
-    item[field] = NUMERIC.has(field) ? num(t.value) : t.value.trim();
+    item[field] = NUMERIC.has(field) ? num(t.value) : field === 'time' ? normTime(t.value) : t.value.trim();
     if (field === 'rsvp') {
       t.className = 'status-' + item.rsvp;
       if (item.rsvp === 'nee') item.tableId = '';
@@ -976,6 +1003,44 @@
     if (!userIsEditing()) fillSettingsForm();
     renderSync();
   }
+
+  /* ---------- Getekende pampas en bladeren ---------- */
+  function drawBotanicals() {
+    $$('svg[data-bot]').forEach((svg) => {
+      const count = parseInt(svg.dataset.bot, 10) || 2;
+      let html = '';
+      for (let k = 0; k < count; k++) {
+        const x0 = 70 + k * 42, top = 40 + k * 46, lean = (k % 2 ? -1 : 1) * (18 + k * 6);
+        const cx = x0 + lean * .5, cy = (420 + top) / 2, x1 = x0 + lean;
+        const pt = (t) => [(1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * x1, (1 - t) * (1 - t) * 420 + 2 * (1 - t) * t * cy + t * t * top];
+        let plume = '';
+        for (let t = .5; t <= 1.001; t += .022) {
+          const [px, py] = pt(t);
+          const len = 10 + 26 * Math.sin(Math.PI * (t - .5) / .5 * .92 + .1);
+          [-1, 1].forEach((side) => {
+            const ex = px + side * len * .8, ey = py - len * .75;
+            plume += `M${px.toFixed(1)} ${py.toFixed(1)}Q${(px + side * len * .2).toFixed(1)} ${(py - len * .6).toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+          });
+        }
+        let leaves = '';
+        [.18, .32].forEach((t, i) => {
+          const [px, py] = pt(t), side = (i + k) % 2 ? -1 : 1, L = 46 - i * 8;
+          leaves += `<path class="blad" d="M${px.toFixed(1)} ${py.toFixed(1)}q${side * L * .35} ${-L * .55} ${side * L} ${-L * .55}q${-side * L * .45} ${L * .25} ${-side * L} ${L * .55}z"/>`;
+        });
+        html += `<g class="wieg w${(k % 3) + 1}"><path class="steel" d="M${x0} 420Q${cx} ${cy} ${x1} ${top}"/><path class="pluim" d="${plume}"/>${leaves}</g>`;
+      }
+      svg.innerHTML = html;
+    });
+  }
+  drawBotanicals();
+
+  // Vervaging rechts van de tabbladen alleen tonen als er nog meer te zien is.
+  const tabsEl = $('.tabs');
+  const tabFade = () => tabsEl.classList.toggle('eind', tabsEl.scrollLeft + tabsEl.clientWidth >= tabsEl.scrollWidth - 4);
+  tabsEl.addEventListener('scroll', tabFade, { passive: true });
+  window.addEventListener('resize', tabFade);
+  tabFade();
+  $$('.tabs button').forEach((b) => b.addEventListener('click', () => b.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })));
 
   render();
   let startTab = 'overzicht';
