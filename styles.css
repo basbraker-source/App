@@ -25,7 +25,7 @@ body {
 a { color: inherit; }
 :focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 
-.app { max-width: 1120px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px) 48px; }
+.app { max-width: 1120px; margin: 0 auto; padding-block: 0 48px; padding-left: max(clamp(16px, 3vw, 40px), env(safe-area-inset-left, 0px)); padding-right: max(clamp(16px, 3vw, 40px), env(safe-area-inset-right, 0px)); }
 .mono, .eyebrow, .stat-label, .table th, .countdown .lbl, .group-head .count, .phase-tag, .footer {
   font-family: var(--mono); font-size: 12px; letter-spacing: .02em; color: var(--mute);
 }
@@ -44,7 +44,7 @@ a { color: inherit; }
 .countdown .message { padding-top: 14px; font-size: clamp(24px, 3vw, 36px); font-weight: 500; letter-spacing: -.03em; }
 
 /* Tabs */
-.tabs { display: flex; gap: 28px; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 28px; scrollbar-width: none; position: sticky; top: 0; background: var(--bg); z-index: 5; }
+.tabs { display: flex; gap: 28px; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 28px; scrollbar-width: none; position: sticky; top: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 5; }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button {
   appearance: none; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 500;
@@ -151,6 +151,12 @@ select { appearance: none; padding-right: 32px; background-image: linear-gradien
 .status-nee { color: var(--danger); }
 .note { color: var(--mute); font-size: 14px; margin: 14px 0 0; max-width: 70ch; }
 .note.warn { color: var(--danger); }
+
+/* Dialog */
+.dialog { position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, .7); display: grid; place-items: center; padding: 16px; }
+.dialog-box { background: var(--surface); border: 1px solid var(--fg); padding: 28px; max-width: 440px; width: 100%; display: grid; gap: 22px; }
+.dialog-box p { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+.btn.primary.danger { background: var(--danger); border-color: var(--danger); color: var(--fg); }
 
 /* Footer / CTA */
 .footer { margin-top: 56px; border-top: 1px solid var(--line); padding-top: 22px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }

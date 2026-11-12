@@ -59,6 +59,7 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) return sanitize(JSON.parse(raw));
     } catch (e) { /* storage unavailable or corrupt */ }
+    if (typeof window.PLANNER_DEMO === 'function') return sanitize(window.PLANNER_DEMO(freshState()));
     return freshState();
   }
 
@@ -76,6 +77,25 @@
   }
 
   let state = load();
+
+  /* ---------- In-page dialog (vervangt confirm/alert) ---------- */
+  function dialog(message, { ok = 'OK', cancel = null, danger = false } = {}) {
+    return new Promise((resolve) => {
+      const wrap = $('#dialog');
+      $('#dialog-msg').textContent = message;
+      const okBtn = $('#dialog-ok'), cancelBtn = $('#dialog-cancel');
+      okBtn.textContent = ok;
+      okBtn.classList.toggle('danger', danger);
+      cancelBtn.hidden = !cancel;
+      if (cancel) cancelBtn.textContent = cancel;
+      wrap.hidden = false;
+      okBtn.focus();
+      const done = (v) => { wrap.hidden = true; okBtn.onclick = cancelBtn.onclick = wrap.onkeydown = null; resolve(v); };
+      okBtn.onclick = () => done(true);
+      cancelBtn.onclick = () => done(false);
+      wrap.onkeydown = (e) => { if (e.key === 'Escape') done(false); };
+    });
+  }
   const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } };
   const commit = () => { save(); render(); };
 
@@ -443,25 +463,25 @@
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(reader.result);
-        if (!confirm('De huidige planning wordt vervangen door de back-up. Doorgaan?')) return;
-        state = sanitize(data);
-        commit();
-        alert('Back-up teruggezet.');
-      } catch (err) {
-        alert('Dit bestand kon niet worden gelezen. Kies een back-up van de bruiloftsplanner (.json).');
-      }
+    reader.onload = async () => {
       e.target.value = '';
+      let data;
+      try { data = JSON.parse(reader.result); } catch (err) {
+        await dialog('Dit bestand kon niet worden gelezen. Kies een back-up van de bruiloftsplanner (.json).');
+        return;
+      }
+      if (!(await dialog('De huidige planning wordt vervangen door de back-up. Doorgaan?', { ok: 'Terugzetten', cancel: 'Annuleren' }))) return;
+      state = sanitize(data);
+      commit();
+      await dialog('Back-up teruggezet.');
     };
     reader.readAsText(file);
   });
 
   $('#print-btn').addEventListener('click', () => window.print());
 
-  $('#reset-btn').addEventListener('click', () => {
-    if (!confirm('Weet je zeker dat je alle gegevens wilt wissen? Dit kan niet ongedaan worden gemaakt.')) return;
+  $('#reset-btn').addEventListener('click', async () => {
+    if (!(await dialog('Weet je zeker dat je alle gegevens wilt wissen? Dit kan niet ongedaan worden gemaakt.', { ok: 'Alles wissen', cancel: 'Annuleren', danger: true }))) return;
     state = freshState();
     commit();
     showTab('overzicht');
