@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bruiloftsplanner</title>
+  <meta name="description" content="Plan jullie bruiloft: aftellen, checklist, budget, gastenlijst en leveranciers op één plek.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <p class="eyebrow">Bruiloftsplanner</p>
+      <h1 id="couple-title">Ons trouwplan</h1>
+      <p id="hero-date" class="hero-date"></p>
+      <div id="countdown" class="countdown" aria-live="polite"></div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Onderdelen">
+      <button role="tab" data-tab="overzicht" aria-selected="true">Overzicht</button>
+      <button role="tab" data-tab="checklist">Checklist</button>
+      <button role="tab" data-tab="budget">Budget</button>
+      <button role="tab" data-tab="gasten">Gasten</button>
+      <button role="tab" data-tab="leveranciers">Leveranciers</button>
+      <button role="tab" data-tab="instellingen">Instellingen</button>
+    </nav>
+
+    <main>
+      <!-- OVERZICHT -->
+      <section id="tab-overzicht" class="panel" role="tabpanel">
+        <div id="welcome" class="card welcome" hidden>
+          <h2>Welkom!</h2>
+          <p>Vul jullie namen, trouwdatum en budget in om te beginnen. Alles wordt alleen in deze browser bewaard.</p>
+          <form id="welcome-form" class="form-grid">
+            <label>Naam 1<input name="partner1" required placeholder="Bijv. Anna"></label>
+            <label>Naam 2<input name="partner2" required placeholder="Bijv. Daan"></label>
+            <label>Trouwdatum<input name="date" type="date"></label>
+            <label>Totaal budget (€)<input name="budget" type="number" min="0" step="100" placeholder="20000"></label>
+            <button class="btn primary" type="submit">Start met plannen</button>
+          </form>
+        </div>
+
+        <div class="stats">
+          <div class="stat card">
+            <span class="stat-label">Checklist</span>
+            <span id="stat-checklist" class="stat-value">0%</span>
+            <div class="bar"><span id="bar-checklist"></span></div>
+            <span id="stat-checklist-sub" class="stat-sub"></span>
+          </div>
+          <div class="stat card">
+            <span class="stat-label">Budget besteed</span>
+            <span id="stat-budget" class="stat-value">€ 0</span>
+            <div class="bar"><span id="bar-budget"></span></div>
+            <span id="stat-budget-sub" class="stat-sub"></span>
+          </div>
+          <div class="stat card">
+            <span class="stat-label">Gasten bevestigd</span>
+            <span id="stat-guests" class="stat-value">0</span>
+            <div class="bar"><span id="bar-guests"></span></div>
+            <span id="stat-guests-sub" class="stat-sub"></span>
+          </div>
+          <div class="stat card">
+            <span class="stat-label">Leveranciers geboekt</span>
+            <span id="stat-vendors" class="stat-value">0</span>
+            <div class="bar"><span id="bar-vendors"></span></div>
+            <span id="stat-vendors-sub" class="stat-sub"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Eerstvolgende taken</h2>
+          <ul id="upcoming" class="task-list compact"></ul>
+        </div>
+      </section>
+
+      <!-- CHECKLIST -->
+      <section id="tab-checklist" class="panel" role="tabpanel" hidden>
+        <div class="card">
+          <form id="task-form" class="inline-form">
+            <input name="title" required placeholder="Nieuwe taak, bijv. 'Proefrit trouwauto'">
+            <select name="phase" id="task-phase"></select>
+            <button class="btn primary" type="submit">Toevoegen</button>
+          </form>
+          <div class="toolbar">
+            <div class="segmented" role="group" aria-label="Filter">
+              <button data-filter="alle" class="active">Alle</button>
+              <button data-filter="open">Open</button>
+              <button data-filter="klaar">Afgerond</button>
+            </div>
+          </div>
+        </div>
+        <div id="checklist-groups"></div>
+      </section>
+
+      <!-- BUDGET -->
+      <section id="tab-budget" class="panel" role="tabpanel" hidden>
+        <div class="stats three">
+          <div class="stat card"><span class="stat-label">Totaal budget</span><span id="b-total" class="stat-value">€ 0</span></div>
+          <div class="stat card"><span class="stat-label">Begroot</span><span id="b-planned" class="stat-value">€ 0</span></div>
+          <div class="stat card"><span class="stat-label">Werkelijk / betaald</span><span id="b-actual" class="stat-value">€ 0</span><span id="b-paid" class="stat-sub"></span></div>
+        </div>
+        <div class="card">
+          <form id="budget-form" class="inline-form">
+            <input name="name" required placeholder="Post, bijv. 'Fotograaf'">
+            <input name="planned" type="number" min="0" step="10" placeholder="Begroot €">
+            <button class="btn primary" type="submit">Toevoegen</button>
+          </form>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Post</th><th class="num">Begroot</th><th class="num">Werkelijk</th><th class="num">Betaald</th><th></th></tr></thead>
+              <tbody id="budget-rows"></tbody>
+              <tfoot><tr><th>Totaal</th><th id="bt-planned" class="num"></th><th id="bt-actual" class="num"></th><th id="bt-paid" class="num"></th><th></th></tr></tfoot>
+            </table>
+          </div>
+          <p id="budget-note" class="note"></p>
+        </div>
+      </section>
+
+      <!-- GASTEN -->
+      <section id="tab-gasten" class="panel" role="tabpanel" hidden>
+        <div class="stats three">
+          <div class="stat card"><span class="stat-label">Uitgenodigd</span><span id="g-total" class="stat-value">0</span><span id="g-split" class="stat-sub"></span></div>
+          <div class="stat card"><span class="stat-label">Komen</span><span id="g-yes" class="stat-value">0</span></div>
+          <div class="stat card"><span class="stat-label">Nog geen reactie</span><span id="g-open" class="stat-value">0</span><span id="g-no" class="stat-sub"></span></div>
+        </div>
+        <div class="card">
+          <form id="guest-form" class="inline-form">
+            <input name="name" required placeholder="Naam (of 'Fam. Jansen')">
+            <input name="count" type="number" min="1" value="1" title="Aantal personen" aria-label="Aantal personen">
+            <select name="type"><option value="dag">Daggast</option><option value="avond">Avondgast</option></select>
+            <button class="btn primary" type="submit">Toevoegen</button>
+          </form>
+          <div class="toolbar">
+            <input id="guest-search" type="search" placeholder="Zoeken…" aria-label="Gasten zoeken">
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Naam</th><th class="num">Pers.</th><th>Type</th><th>Reactie</th><th>Dieet / opmerking</th><th></th></tr></thead>
+              <tbody id="guest-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- LEVERANCIERS -->
+      <section id="tab-leveranciers" class="panel" role="tabpanel" hidden>
+        <div class="card">
+          <form id="vendor-form" class="inline-form">
+            <input name="category" required placeholder="Soort, bijv. 'Fotograaf'">
+            <input name="name" placeholder="Bedrijf / naam">
+            <input name="contact" placeholder="Telefoon of e-mail">
+            <button class="btn primary" type="submit">Toevoegen</button>
+          </form>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Soort</th><th>Naam</th><th>Contact</th><th>Status</th><th>Notitie</th><th></th></tr></thead>
+              <tbody id="vendor-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- INSTELLINGEN -->
+      <section id="tab-instellingen" class="panel" role="tabpanel" hidden>
+        <div class="card">
+          <h2>Jullie gegevens</h2>
+          <form id="settings-form" class="form-grid">
+            <label>Naam 1<input name="partner1"></label>
+            <label>Naam 2<input name="partner2"></label>
+            <label>Trouwdatum<input name="date" type="date"></label>
+            <label>Totaal budget (€)<input name="budget" type="number" min="0" step="100"></label>
+            <label class="wide">Locatie<input name="venue" placeholder="Bijv. Kasteel De Haar"></label>
+            <button class="btn primary" type="submit">Opslaan</button>
+          </form>
+          <p id="settings-saved" class="note" hidden>Opgeslagen ✓</p>
+        </div>
+        <div class="card">
+          <h2>Gegevens bewaren</h2>
+          <p class="note">Jullie planning wordt alleen in deze browser op dit apparaat opgeslagen. Maak een back-up om hem op een ander apparaat te openen of veilig te stellen.</p>
+          <div class="btn-row">
+            <button id="export-btn" class="btn">Back-up downloaden</button>
+            <label class="btn">Back-up terugzetten<input id="import-file" type="file" accept="application/json,.json" hidden></label>
+            <button id="print-btn" class="btn">Afdrukken</button>
+            <button id="reset-btn" class="btn danger">Alles wissen</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">Gegevens blijven privé in je eigen browser.</footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
